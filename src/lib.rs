@@ -28,6 +28,40 @@ pub enum WindowEventKind {
     WindowMovedOrResized,
 }
 
+impl WindowEventKind {
+    pub(crate) fn from_event_constant(event: u32) -> Option<Self> {
+        let ret = match event {
+            EVENT_SYSTEM_FOREGROUND => Some(Self::ForegroundWindowChanged),
+            EVENT_OBJECT_NAMECHANGE => Some(Self::WindowNameChanged),
+            EVENT_OBJECT_SHOW => Some(Self::WindowBecameVisible),
+            EVENT_OBJECT_HIDE => Some(Self::WindowBecameHidden),
+            EVENT_OBJECT_CREATE => Some(Self::WindowCreated),
+            EVENT_OBJECT_DESTROY => Some(Self::WindowDestroyed),
+            EVENT_OBJECT_LOCATIONCHANGE => Some(Self::WindowMovedOrResized),
+            _ => None,
+        };
+        
+        // FIXME: move this to a test
+        if let Some(ret) = ret {
+            debug_assert_eq!(ret.event_constant(), event);
+        }
+        
+        ret
+    }
+    
+    pub(crate) fn event_constant(self) -> u32 {
+        match self {
+            Self::ForegroundWindowChanged => EVENT_SYSTEM_FOREGROUND,
+            Self::WindowNameChanged => EVENT_OBJECT_NAMECHANGE,
+            Self::WindowBecameVisible => EVENT_OBJECT_SHOW,
+            Self::WindowBecameHidden => EVENT_OBJECT_HIDE,
+            Self::WindowCreated => EVENT_OBJECT_CREATE,
+            Self::WindowDestroyed => EVENT_OBJECT_DESTROY,
+            Self::WindowMovedOrResized => EVENT_OBJECT_LOCATIONCHANGE,
+        }
+    }
+}
+
 unsafe extern "system" fn win_event_proc(
     _h_win_event_hook: HWINEVENTHOOK,
     event: u32,
