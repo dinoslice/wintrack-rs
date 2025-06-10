@@ -127,21 +127,32 @@ pub fn set_callback(/* impl Fn */) -> Result<(), ()> {
     todo!()
 }
 
-pub fn unhook() -> Result<(), ()> {
+#[derive(Debug, thiserror::Error)]
+pub enum UnhookError {
+    #[error("No hook was set yet; call `try_hook()` to set a hook.")]
+    HookNotSet,
+    #[error("The hook thread failed: {0}")]
+    HookThreadError(WinErr),
+    #[error("Failed to quit to the hook thread (failed to send WM_QUIT): {0}")]
+    QuitMessageQueueError(WinErr),
+}
+
+pub fn unhook() -> Result<(), UnhookError> {
     let mut state = STATE.lock();
 
     let Some((thread, thread_id)) = state.thread.take() else {
-        return Err(());
+        return Err(UnhookError::HookNotSet);
     };
 
     match unsafe { PostThreadMessageW(thread_id, WM_QUIT, WPARAM::default(), LPARAM::default()) } {
         Ok(()) => match thread.join() {
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(err)) => Err(()),
             Err(panic) => panic::resume_unwind(panic),
+            Ok(res) => match res {
+                Ok(()) => Ok(()),
+                Err(err) => Err(UnhookError::HookThreadError(err)),
+            }
         }
-        Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread_id should always point to a valid thread"),
-        Err(err) if err == WinErr::from(ERROR_NOT_ENOUGH_QUOTA) => Err(()),
-        Err(err) => Err(()),
+        Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread should always point to a valid thread"),
+        Err(err) => Err(UnhookError::QuitMessageQueueError(err)),
     }
 }
