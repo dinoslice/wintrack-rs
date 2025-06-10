@@ -1,9 +1,12 @@
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
+use std::ptr;
 use parking_lot::Mutex;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::Accessibility::{HWINEVENTHOOK};
-use windows::Win32::UI::WindowsAndMessaging::{GetWindowTextLengthW, GetWindowTextW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW};
+use windows::core::Error as WinErr;
+use windows::Win32::System::Threading::GetCurrentThreadId;
+use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT};
 
 type WinThreadId = u32;
 
@@ -49,3 +52,53 @@ pub struct WinHookState {
 }
 
 pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread_id: None });
+
+
+pub fn try_hook() -> Result<(), ()> {
+    let mut state = STATE.lock();
+
+    if state.thread_id.is_some() {
+        Err(()) // already hooked
+    } else {
+        match hook_inner() {
+            Ok(thread_id) => {
+                state.thread_id = Some(thread_id);
+
+                Ok(())
+            },
+            Err(err) => {
+                Err((/* err */))
+            }
+        }
+    }
+}
+
+fn hook_inner() -> Result<WinThreadId, WinErr> {
+    let (tx, rx) = oneshot::channel();
+
+    std::thread::spawn(move || unsafe {
+        let hook = SetWinEventHook(
+            EVENT_OBJECT_NAMECHANGE,
+            EVENT_OBJECT_NAMECHANGE,
+            None,
+            Some(win_event_proc),
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT,
+        );
+
+        let res = if hook.is_invalid() {
+            Err(WinErr::from_win32())
+        } else {
+            Ok(GetCurrentThreadId())
+        };
+
+        tx.send(res).expect("rx should still exist");
+
+        let _ = GetMessageW(ptr::null_mut(), None, 0, 0);
+
+        println!("closing message thread");
+    });
+
+    rx.recv().expect("should eventually recv a message")
+}
