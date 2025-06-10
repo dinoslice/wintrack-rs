@@ -1,6 +1,7 @@
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::ptr;
+use std::thread::JoinHandle;
 use parking_lot::Mutex;
 use windows::Win32::Foundation::{ERROR_INVALID_THREAD_ID, ERROR_NOT_ENOUGH_QUOTA, HWND, LPARAM, WPARAM};
 use windows::core::{Error as WinErr, BOOL};
@@ -48,21 +49,21 @@ unsafe fn get_window_title(hwnd: HWND) -> Option<String> {
 #[derive(Default)]
 pub struct WinHookState {
     pub callback: Option<Box<dyn Fn() -> () + Send>>,
-    pub thread_id: Option<WinThreadId>,
+    pub thread: Option<(JoinHandle<Result<(), WinErr>>, WinThreadId)>,
 }
 
-pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread_id: None });
+pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
 
 
 pub fn try_hook() -> Result<(), ()> {
     let mut state = STATE.lock();
 
-    if state.thread_id.is_some() {
+    if state.thread.is_some() {
         Err(()) // already hooked
     } else {
         match hook_inner() {
             Ok(thread_id) => {
-                state.thread_id = Some(thread_id);
+                state.thread = Some(thread_id);
 
                 Ok(())
             },
@@ -73,10 +74,10 @@ pub fn try_hook() -> Result<(), ()> {
     }
 }
 
-fn hook_inner() -> Result<WinThreadId, WinErr> {
+fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr> {
     let (tx, rx) = oneshot::channel();
 
-    std::thread::spawn(move || unsafe {
+    let handle = std::thread::spawn(move || unsafe {
         let hook = SetWinEventHook(
             EVENT_OBJECT_NAMECHANGE,
             EVENT_OBJECT_NAMECHANGE,
@@ -118,7 +119,9 @@ fn hook_inner() -> Result<WinThreadId, WinErr> {
         }
     });
 
-    rx.recv().expect("should eventually recv a message")
+    rx.recv()
+        .expect("should eventually recv a message")
+        .map(|id| (handle, id))
 }
 
 pub fn set_callback(/* impl Fn */) -> Result<(), ()> {
@@ -128,12 +131,16 @@ pub fn set_callback(/* impl Fn */) -> Result<(), ()> {
 pub fn unhook() -> Result<(), ()> {
     let mut state = STATE.lock();
 
-    let Some(thread_id) = state.thread_id.take() else {
+    let Some((thread, thread_id)) = state.thread.take() else {
         return Err(());
     };
 
     match unsafe { PostThreadMessageW(thread_id, WM_QUIT, WPARAM::default(), LPARAM::default()) } {
-        Ok(()) => Ok(()),
+        // propagate panic
+        Ok(()) => match thread.join().unwrap() {
+            Ok(()) => Ok(()),
+            Err(err) => Err(()),
+        }
         Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread_id should always point to a valid thread"),
         Err(err) if err == WinErr::from(ERROR_NOT_ENOUGH_QUOTA) => Err(()),
         Err(err) => Err(()),
