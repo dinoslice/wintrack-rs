@@ -6,10 +6,9 @@ use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
 use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_FOREGROUND, MSG, OBJECT_IDENTIFIER, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
+pub use window_info::WinThreadId;
 
 pub mod window_info;
-
-type WinThreadId = u32;
 
 unsafe extern "system" fn win_event_proc(
     _h_win_event_hook: HWINEVENTHOOK,

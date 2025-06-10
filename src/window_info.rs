@@ -95,3 +95,6 @@ fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
     
     Ok(rect)
 }
+
+pub type WinThreadId = u32;
+pub type WinProcessId = u32;
