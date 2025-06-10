@@ -40,3 +40,27 @@ fn get_window_class_name(hwnd: HWND) -> Result<String, WinErr> {
         copied => Ok(String::from_utf16_lossy(&buffer[..copied as usize]))
     }
 }
+
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+pub struct WindowRect {
+    pub left: i32,
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+}
+
+impl WindowRect {
+    pub fn top_left(self) -> (i32, i32) {
+        (self.left, self.top)
+    }
+    
+    pub fn size(self) -> (u32, u32) {
+        let width = self.right - self.left;
+        assert!(!width.is_negative(), "window width should be non-negative");
+
+        let height = self.bottom - self.top;
+        assert!(!height.is_negative(), "window height should be non-negative");
+
+        (width as _, height as _)
+    }
+}
