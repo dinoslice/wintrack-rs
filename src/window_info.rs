@@ -1,9 +1,9 @@
 use std::num::NonZeroU32;
 use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
-use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId};
+use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow};
 
-fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
+pub fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
     // clear last error to ensure GetWindowTextLengthW result can be used
     unsafe { SetLastError(ERROR_SUCCESS) };
     
@@ -110,3 +110,14 @@ fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinProcessId
         None => Err(WinErr::from_win32()),
     }
 }
+
+fn is_window_minimized(hwnd: HWND) -> Option<bool> {
+    if unsafe { IsWindow(Some(hwnd)).as_bool() } {
+        Some(
+            unsafe { IsIconic(hwnd).as_bool() }
+        )
+    } else {
+        None
+    }
+}
+
