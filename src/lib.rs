@@ -3,7 +3,7 @@ use std::os::windows::ffi::OsStringExt;
 use std::{panic, ptr};
 use std::thread::JoinHandle;
 use parking_lot::Mutex;
-use windows::Win32::Foundation::{ERROR_INVALID_THREAD_ID, ERROR_NOT_ENOUGH_QUOTA, HWND, LPARAM, WPARAM};
+use windows::Win32::Foundation::{ERROR_INVALID_PARAMETER, ERROR_INVALID_THREAD_ID, ERROR_MOD_NOT_FOUND, HWND, LPARAM, WPARAM};
 use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
@@ -89,7 +89,12 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         );
 
         let res = if hook.is_invalid() {
-            Err(WinErr::from_win32())
+            match WinErr::from_win32() {
+                err if err == WinErr::from(ERROR_INVALID_PARAMETER) => unreachable!("SetWinEventHook parameters should be correct"),
+                err if err == WinErr::from(ERROR_MOD_NOT_FOUND) => unreachable!("hmodwineventproc is null, so never should trigger this error"),
+                err if err == WinErr::from(ERROR_INVALID_THREAD_ID) => unreachable!("idthread is 0, so never should trigger this error"),
+                err => Err(err)
+            }
         } else {
             Ok(GetCurrentThreadId())
         };
