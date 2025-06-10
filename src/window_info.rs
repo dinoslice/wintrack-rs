@@ -1,9 +1,36 @@
 use std::num::NonZeroU32;
-use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
+use windows::Win32::Foundation::{SetLastError, ERROR_INVALID_WINDOW_HANDLE, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
 use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible};
 
-pub fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub struct WindowSnapshot {
+    pub title: String,
+    pub class_name: String,
+    pub rect: WindowRect,
+    pub thread_id: WinThreadId,
+    pub process_id: WinProcessId,
+    pub is_minimized: bool,
+    pub is_foreground: bool,
+}
+
+impl WindowSnapshot {
+    pub fn from_hwnd(hwnd: HWND) -> Result<Self, WinErr> {
+        let (thread_id, process_id) = get_window_thread_process_id(hwnd)?;
+        
+        Ok(Self {
+            title: get_window_title(hwnd)?,
+            class_name: get_window_class_name(hwnd)?,
+            rect: get_window_rect(hwnd)?,
+            thread_id,
+            process_id,
+            is_minimized: is_window_minimized(hwnd).ok_or(WinErr::from(ERROR_INVALID_WINDOW_HANDLE))?,
+            is_foreground: is_window_foreground(hwnd).ok_or(WinErr::from(ERROR_INVALID_WINDOW_HANDLE))?,
+        })
+    }
+}
+
+fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
     // clear last error to ensure GetWindowTextLengthW result can be used
     unsafe { SetLastError(ERROR_SUCCESS) };
     
