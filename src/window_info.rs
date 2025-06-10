@@ -24,10 +24,10 @@ fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
 
     match unsafe { GetWindowTextW(hwnd, &mut buffer) } {
         0 => Err(WinErr::from_win32()),
-        copied => Ok(
-            OsString::from_wide(&buffer[..copied as usize])
-                .to_string_lossy()
-                .to_string()
-        )
+        copied => Ok(String::from_utf16_lossy(&buffer[..copied as usize]))
     }
+}
+
+fn get_window_class_name(hwnd: HWND) -> Result<String, WinErr> {
+    
 }
