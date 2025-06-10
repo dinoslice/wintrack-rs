@@ -91,7 +91,9 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
                 err => Err(err)
             }
         } else {
-            Ok(GetCurrentThreadId())
+            let thread_id = GetCurrentThreadId();
+            
+            Ok(WinThreadId::new(thread_id).expect("thread id should always be nonzero"))
         };
 
         tx.send(res).expect("rx should still exist");
@@ -144,7 +146,7 @@ pub fn unhook() -> Result<(), UnhookError> {
         return Err(UnhookError::HookNotSet);
     };
 
-    match unsafe { PostThreadMessageW(thread_id, WM_QUIT, WPARAM::default(), LPARAM::default()) } {
+    match unsafe { PostThreadMessageW(thread_id.get(), WM_QUIT, WPARAM::default(), LPARAM::default()) } {
         Ok(()) => match thread.join() {
             Err(panic) => panic::resume_unwind(panic),
             Ok(res) => match res {

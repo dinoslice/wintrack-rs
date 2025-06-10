@@ -1,3 +1,4 @@
+use std::num::NonZeroU32;
 use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
 use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW};
@@ -96,5 +97,5 @@ fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
     Ok(rect)
 }
 
-pub type WinThreadId = u32;
+pub type WinThreadId = NonZeroU32;
 pub type WinProcessId = u32;
