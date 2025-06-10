@@ -7,7 +7,7 @@ use windows::Win32::Foundation::{ERROR_INVALID_PARAMETER, ERROR_INVALID_THREAD_I
 use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
-use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, MSG, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_FOREGROUND, MSG, OBJECT_IDENTIFIER, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
 
 type WinThreadId = u32;
 
@@ -20,11 +20,18 @@ unsafe extern "system" fn win_event_proc(
     _dw_event_thread: u32,
     _dwms_event_time: u32,
 ) {
-    if event == EVENT_OBJECT_NAMECHANGE && id_object == OBJID_WINDOW.0 && id_child == CHILDID_SELF as _ {
-        if let Some(title) = unsafe { get_window_title(hwnd) } {
-            if !title.is_empty() {
-                println!("Window title changed: \"{}\"", title);
-            }
+    if OBJECT_IDENTIFIER(id_object) == OBJID_WINDOW && id_child == CHILDID_SELF as _ {
+        match event {
+            EVENT_OBJECT_NAMECHANGE => {},
+            EVENT_SYSTEM_FOREGROUND => {},
+            EVENT_OBJECT_SHOW => {},
+            EVENT_OBJECT_HIDE => {},
+            EVENT_OBJECT_CREATE => {},
+            EVENT_OBJECT_DESTROY => {},
+            EVENT_OBJECT_LOCATIONCHANGE => {},
+            EVENT_SYSTEM_CAPTURESTART => {},
+            EVENT_SYSTEM_CAPTUREEND => {},
+            _ => {}
         }
     }
 }
