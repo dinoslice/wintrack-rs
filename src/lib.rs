@@ -1,13 +1,13 @@
-use std::ffi::OsString;
-use std::os::windows::ffi::OsStringExt;
-use std::{panic, ptr};
+use std::panic;
 use std::thread::JoinHandle;
 use parking_lot::Mutex;
 use windows::Win32::Foundation::{ERROR_INVALID_PARAMETER, ERROR_INVALID_THREAD_ID, ERROR_MOD_NOT_FOUND, HWND, LPARAM, WPARAM};
 use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
-use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_FOREGROUND, MSG, OBJECT_IDENTIFIER, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_FOREGROUND, MSG, OBJECT_IDENTIFIER, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
+
+pub mod window_info;
 
 type WinThreadId = u32;
 
@@ -34,23 +34,6 @@ unsafe extern "system" fn win_event_proc(
             _ => {}
         }
     }
-}
-
-unsafe fn get_window_title(hwnd: HWND) -> Option<String> {
-    let length = unsafe { GetWindowTextLengthW(hwnd) };
-    if length == 0 {
-        return None;
-    }
-
-    let mut buffer = vec![0; (length + 1) as usize];
-
-    let copied = unsafe { GetWindowTextW(hwnd, &mut buffer) };
-    if copied == 0 {
-        return None;
-    }
-
-    let os_string = OsString::from_wide(&buffer[..copied as usize]);
-    os_string.into_string().ok()
 }
 
 #[derive(Default)]
