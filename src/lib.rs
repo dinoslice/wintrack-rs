@@ -103,6 +103,10 @@ fn hook_inner() -> Result<WinThreadId, WinErr> {
     rx.recv().expect("should eventually recv a message")
 }
 
+pub fn set_callback(/* impl Fn */) -> Result<(), ()> {
+    todo!()
+}
+
 pub fn unhook() -> Result<(), ()> {
     let mut state = STATE.lock();
 
