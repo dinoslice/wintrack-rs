@@ -113,6 +113,9 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
                 BOOL(_) => unreachable!("message queue should not recv any other messages"),
             }
         }
+        
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwinevent
+        // "If the client's thread ends, the system automatically calls [UnhookWinEvent]"
     });
 
     rx.recv()
