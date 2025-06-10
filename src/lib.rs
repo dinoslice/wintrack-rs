@@ -1,8 +1,11 @@
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
+use parking_lot::Mutex;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::Accessibility::{HWINEVENTHOOK};
 use windows::Win32::UI::WindowsAndMessaging::{GetWindowTextLengthW, GetWindowTextW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW};
+
+type WinThreadId = u32;
 
 unsafe extern "system" fn win_event_proc(
     _h_win_event_hook: HWINEVENTHOOK,
@@ -38,3 +41,11 @@ unsafe fn get_window_title(hwnd: HWND) -> Option<String> {
     let os_string = OsString::from_wide(&buffer[..copied as usize]);
     os_string.into_string().ok()
 }
+
+#[derive(Default)]
+pub struct WinHookState {
+    pub callback: Option<Box<dyn Fn() -> () + Send>>,
+    pub thread_id: Option<WinThreadId>,
+}
+
+pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread_id: None });
