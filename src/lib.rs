@@ -3,10 +3,10 @@ use std::os::windows::ffi::OsStringExt;
 use std::ptr;
 use parking_lot::Mutex;
 use windows::Win32::Foundation::{ERROR_INVALID_THREAD_ID, ERROR_NOT_ENOUGH_QUOTA, HWND, LPARAM, WPARAM};
-use windows::core::Error as WinErr;
+use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
-use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, MSG, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
 
 type WinThreadId = u32;
 
@@ -94,10 +94,28 @@ fn hook_inner() -> Result<WinThreadId, WinErr> {
         };
 
         tx.send(res).expect("rx should still exist");
-
-        let _ = GetMessageW(ptr::null_mut(), None, 0, 0);
-
-        println!("closing message thread");
+        
+        loop {
+            let mut msg = MSG::default();
+            
+            match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
+                BOOL(0) => {
+                    assert_eq!(
+                        msg.message,WM_QUIT,
+                        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagew
+                        "If the function retrieves a message other than WM_QUIT, the return value is nonzero."
+                    );
+                    
+                    break Ok(());
+                }
+                BOOL(-1) => {
+                    break Err(WinErr::from_win32());
+                }
+                BOOL(_) => {
+                    unreachable!("message queue should not recv any other messages");
+                }
+            }
+        }
     });
 
     rx.recv().expect("should eventually recv a message")
