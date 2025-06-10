@@ -7,8 +7,26 @@ use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
 use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_SHOW, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_FOREGROUND, MSG, OBJECT_IDENTIFIER, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
 pub use window_info::WinThreadId;
+use crate::window_info::WindowSnapshot;
 
 pub mod window_info;
+
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+pub struct WindowEvent {
+    pub kind: WindowEventKind,
+    pub snapshot: WindowSnapshot,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum WindowEventKind {
+    ForegroundWindowChanged,
+    WindowNameChanged,
+    WindowBecameVisible,
+    WindowBecameHidden,
+    WindowCreated,
+    WindowDestroyed,
+    WindowMovedOrResized,
+}
 
 unsafe extern "system" fn win_event_proc(
     _h_win_event_hook: HWINEVENTHOOK,
@@ -28,8 +46,6 @@ unsafe extern "system" fn win_event_proc(
             EVENT_OBJECT_CREATE => {},
             EVENT_OBJECT_DESTROY => {},
             EVENT_OBJECT_LOCATIONCHANGE => {},
-            EVENT_SYSTEM_CAPTURESTART => {},
-            EVENT_SYSTEM_CAPTUREEND => {},
             _ => {}
         }
     }
