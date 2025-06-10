@@ -102,7 +102,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
             match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
                 BOOL(0) => {
                     assert_eq!(
-                        msg.message,WM_QUIT,
+                        msg.message, WM_QUIT,
                         // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagew
                         "If the function retrieves a message other than WM_QUIT, the return value is nonzero."
                     );
