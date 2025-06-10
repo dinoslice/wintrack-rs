@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
-use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW};
+use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId};
 
 fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
     // clear last error to ensure GetWindowTextLengthW result can be used
@@ -99,3 +99,14 @@ fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
 
 pub type WinThreadId = NonZeroU32;
 pub type WinProcessId = u32;
+
+fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinProcessId), WinErr> {
+    let mut process_id = 0;
+    
+    let thread_id = unsafe { GetWindowThreadProcessId(hwnd, Some(&mut process_id)) };
+    
+    match WinThreadId::new(thread_id) {
+        Some(thread_id) => Ok((thread_id, process_id)),
+        None => Err(WinErr::from_win32()),
+    }
+}
