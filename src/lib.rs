@@ -72,22 +72,27 @@ unsafe extern "system" fn win_event_proc(
     _dwms_event_time: u32,
 ) {
     if OBJECT_IDENTIFIER(id_object) == OBJID_WINDOW && id_child == CHILDID_SELF as _ {
-        match event {
-            EVENT_OBJECT_NAMECHANGE => {},
-            EVENT_SYSTEM_FOREGROUND => {},
-            EVENT_OBJECT_SHOW => {},
-            EVENT_OBJECT_HIDE => {},
-            EVENT_OBJECT_CREATE => {},
-            EVENT_OBJECT_DESTROY => {},
-            EVENT_OBJECT_LOCATIONCHANGE => {},
-            _ => {}
+        let Some(kind) = WindowEventKind::from_event_constant(event) else {
+            return;
+        };
+        
+        let snapshot = match WindowSnapshot::from_hwnd(hwnd) {
+            Ok(snapshot) => snapshot,
+            Err(err) => {
+                eprintln!("{err}"); // TODO: log error!
+                return;
+            }
+        };
+        
+        if let Some(callback) = &STATE.lock().callback {
+            callback(WindowEvent { kind, snapshot });
         }
     }
 }
 
 #[derive(Default)]
 pub struct WinHookState {
-    pub callback: Option<Box<dyn Fn() -> () + Send>>,
+    pub callback: Option<Box<dyn Fn(WindowEvent) + Send>>,
     pub thread: Option<(JoinHandle<Result<(), WinErr>>, WinThreadId)>,
 }
 
