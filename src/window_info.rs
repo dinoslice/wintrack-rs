@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
-use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow};
+use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible};
 
 pub fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
     // clear last error to ensure GetWindowTextLengthW result can be used
@@ -121,3 +121,22 @@ fn is_window_minimized(hwnd: HWND) -> Option<bool> {
     }
 }
 
+fn is_window_visible(hwnd: HWND) -> Option<bool> {
+    if unsafe { IsWindow(Some(hwnd)).as_bool() } {
+        Some(
+            unsafe { IsWindowVisible(hwnd).as_bool() }
+        )
+    } else {
+        None
+    }
+}
+
+pub fn is_window_foreground(hwnd: HWND) -> Option<bool> {
+    if unsafe { IsWindow(Some(hwnd)).as_bool() } {
+        Some(
+            hwnd == unsafe { GetForegroundWindow() }
+        )
+    } else {
+        None
+    }
+}
