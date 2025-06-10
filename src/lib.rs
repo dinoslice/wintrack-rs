@@ -90,9 +90,11 @@ unsafe extern "system" fn win_event_proc(
     }
 }
 
+pub type WindowEventCallback = Box<dyn Fn(WindowEvent) + Send>;
+
 #[derive(Default)]
 pub struct WinHookState {
-    pub callback: Option<Box<dyn Fn(WindowEvent) + Send>>,
+    pub callback: Option<WindowEventCallback>,
     pub thread: Option<(JoinHandle<Result<(), WinErr>>, WinThreadId)>,
 }
 
@@ -180,8 +182,12 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         .map(|id| (handle, id))
 }
 
-pub fn set_callback(/* impl Fn */) -> Result<(), ()> {
-    todo!()
+pub fn set_callback(callback: WindowEventCallback) -> Option<WindowEventCallback> {
+    STATE.lock().callback.replace(callback)
+}
+
+pub fn remove_callback() -> Option<WindowEventCallback> {
+    STATE.lock().callback.take()
 }
 
 #[derive(Debug, thiserror::Error)]
