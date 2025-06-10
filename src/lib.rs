@@ -2,11 +2,11 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::ptr;
 use parking_lot::Mutex;
-use windows::Win32::Foundation::HWND;
+use windows::Win32::Foundation::{ERROR_INVALID_THREAD_ID, ERROR_NOT_ENOUGH_QUOTA, HWND, LPARAM, WPARAM};
 use windows::core::Error as WinErr;
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
-use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, GetWindowTextLengthW, GetWindowTextW, PostThreadMessageW, CHILDID_SELF, EVENT_OBJECT_NAMECHANGE, OBJID_WINDOW, WINEVENT_OUTOFCONTEXT, WM_QUIT};
 
 type WinThreadId = u32;
 
@@ -101,4 +101,19 @@ fn hook_inner() -> Result<WinThreadId, WinErr> {
     });
 
     rx.recv().expect("should eventually recv a message")
+}
+
+pub fn unhook() -> Result<(), ()> {
+    let mut state = STATE.lock();
+
+    let Some(thread_id) = state.thread_id.take() else {
+        return Err(());
+    };
+
+    match unsafe { PostThreadMessageW(thread_id, WM_QUIT, WPARAM::default(), LPARAM::default()) } {
+        Ok(()) => Ok(()),
+        Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread_id should always point to a valid thread"),
+        Err(err) if err == WinErr::from(ERROR_NOT_ENOUGH_QUOTA) => Err(()),
+        Err(err) => Err(()),
+    }
 }
