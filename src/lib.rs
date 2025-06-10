@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
-use std::ptr;
+use std::{panic, ptr};
 use std::thread::JoinHandle;
 use parking_lot::Mutex;
 use windows::Win32::Foundation::{ERROR_INVALID_THREAD_ID, ERROR_NOT_ENOUGH_QUOTA, HWND, LPARAM, WPARAM};
@@ -136,10 +136,10 @@ pub fn unhook() -> Result<(), ()> {
     };
 
     match unsafe { PostThreadMessageW(thread_id, WM_QUIT, WPARAM::default(), LPARAM::default()) } {
-        // propagate panic
-        Ok(()) => match thread.join().unwrap() {
-            Ok(()) => Ok(()),
-            Err(err) => Err(()),
+        Ok(()) => match thread.join() {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(err)) => Err(()),
+            Err(panic) => panic::resume_unwind(panic),
         }
         Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread_id should always point to a valid thread"),
         Err(err) if err == WinErr::from(ERROR_NOT_ENOUGH_QUOTA) => Err(()),
