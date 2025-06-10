@@ -1,8 +1,6 @@
-use std::ffi::OsString;
-use std::os::windows::ffi::OsStringExt;
-use windows::Win32::Foundation::{GetLastError, SetLastError, ERROR_SUCCESS, HWND};
+use windows::Win32::Foundation::{SetLastError, ERROR_SUCCESS, HWND, RECT};
 use windows::core::Error as WinErr; 
-use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextLengthW, GetWindowTextW};
+use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW};
 
 fn get_window_title(hwnd: HWND) -> Result<String, WinErr> {
     // clear last error to ensure GetWindowTextLengthW result can be used
@@ -85,4 +83,15 @@ impl WindowRect {
         
         (width as _, height as _)
     }
+}
+
+fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
+    let mut rect = RECT::default();
+
+    unsafe { GetWindowRect(hwnd, &mut rect)? };
+    
+    let rect = WindowRect::new(rect.left, rect.top, rect.right, rect.bottom)
+        .expect("window dimensions should be non-negative");
+    
+    Ok(rect)
 }
