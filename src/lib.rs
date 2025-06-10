@@ -110,7 +110,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
                     break Ok(());
                 }
                 BOOL(-1) => break Err(WinErr::from_win32()),
-                BOOL(_) => unreachable!("message queue should not recv any other messages"),
+                bool => unreachable!("message queue should not recv any other messages ({bool:?}, msg: {})", msg.message),
             }
         }
         
