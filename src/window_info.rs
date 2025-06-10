@@ -43,24 +43,46 @@ fn get_window_class_name(hwnd: HWND) -> Result<String, WinErr> {
 
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct WindowRect {
-    pub left: i32,
-    pub top: i32,
-    pub right: i32,
-    pub bottom: i32,
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
 }
 
 impl WindowRect {
+    pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Option<Self> {
+        if left <= right && top <= bottom {
+            Some(Self { left, top, right, bottom })
+        } else {
+            None
+        }
+    }
+    
+    pub fn left(self) -> i32 {
+        self.left
+    }
+
+    pub fn top(self) -> i32 {
+        self.top
+    }
+
+    pub fn right(self) -> i32 {
+        self.right
+    }
+
+    pub fn bottom(self) -> i32 {
+        self.bottom
+    }
+    
     pub fn top_left(self) -> (i32, i32) {
         (self.left, self.top)
     }
     
     pub fn size(self) -> (u32, u32) {
         let width = self.right - self.left;
-        assert!(!width.is_negative(), "window width should be non-negative");
-
+        
         let height = self.bottom - self.top;
-        assert!(!height.is_negative(), "window height should be non-negative");
-
+        
         (width as _, height as _)
     }
 }
