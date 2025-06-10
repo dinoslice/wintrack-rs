@@ -54,12 +54,20 @@ pub struct WinHookState {
 
 pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
 
+#[derive(Debug, thiserror::Error)]
+pub enum TryHookError {
+    #[error("Hook already set; no need to set it again.")]
+    HookAlreadySet,
+    #[error("Failed to set hook: {0}")]
+    FailedToSetHook(WinErr),
+}
 
-pub fn try_hook() -> Result<(), ()> {
+
+pub fn try_hook() -> Result<(), TryHookError> {
     let mut state = STATE.lock();
 
     if state.thread.is_some() {
-        Err(()) // already hooked
+        Err(TryHookError::HookAlreadySet)
     } else {
         match hook_inner() {
             Ok(thread_id) => {
@@ -67,9 +75,7 @@ pub fn try_hook() -> Result<(), ()> {
 
                 Ok(())
             },
-            Err(err) => {
-                Err((/* err */))
-            }
+            Err(err) => Err(TryHookError::FailedToSetHook(err)),
         }
     }
 }
