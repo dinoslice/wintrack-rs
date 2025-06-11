@@ -1,7 +1,7 @@
 use std::panic;
 use std::thread::JoinHandle;
 use parking_lot::Mutex;
-use windows::Win32::Foundation::{ERROR_INVALID_PARAMETER, ERROR_INVALID_THREAD_ID, ERROR_MOD_NOT_FOUND, HWND, LPARAM, WPARAM};
+use windows::Win32::Foundation::{ERROR_INVALID_FUNCTION, ERROR_INVALID_PARAMETER, ERROR_INVALID_THREAD_ID, ERROR_INVALID_WINDOW_HANDLE, ERROR_MOD_NOT_FOUND, ERROR_PROC_NOT_FOUND, HWND, LPARAM, WPARAM};
 use windows::core::{Error as WinErr, BOOL};
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
@@ -139,31 +139,30 @@ pub fn try_hook() -> Result<(), TryHookError> {
 fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr> {
     let (tx, rx) = oneshot::channel();
 
-    let handle = std::thread::spawn(move || unsafe {
+    let handle = std::thread::spawn(move || {
         let event_const = WindowEventKind::ALL.map(WindowEventKind::event_constant);
         
         let min = *event_const.iter().min().expect("should be at least one event kind");
         let max = *event_const.iter().max().expect("should be at least one event kind");
-        
-        let hook = SetWinEventHook(
-            min,
-            max,
-            None,
-            Some(win_event_proc),
-            0,
-            0,
-            WINEVENT_OUTOFCONTEXT,
-        );
+
+        // SAFETY: callback signature is correct, callback cannot capture locals due to being a fn ptr,
+        // event range is valid, thread will set up event loop
+        let hook = unsafe {
+            SetWinEventHook(min, max, None, Some(win_event_proc), 0, 0, WINEVENT_OUTOFCONTEXT)
+        };
 
         let res = if hook.is_invalid() {
             match WinErr::from_win32() {
                 err if err == WinErr::from(ERROR_INVALID_PARAMETER) => unreachable!("SetWinEventHook parameters should be correct"),
                 err if err == WinErr::from(ERROR_MOD_NOT_FOUND) => unreachable!("hmodwineventproc is null, so never should trigger this error"),
                 err if err == WinErr::from(ERROR_INVALID_THREAD_ID) => unreachable!("idthread is 0, so never should trigger this error"),
+                err if err == WinErr::from(ERROR_INVALID_FUNCTION) => unreachable!("function should have right signature & calling abi"),
+                err if err == WinErr::from(ERROR_PROC_NOT_FOUND) => unreachable!("not using a DLL"),
                 err => Err(err)
             }
         } else {
-            let thread_id = GetCurrentThreadId();
+            // SAFETY: always safe to call
+            let thread_id = unsafe { GetCurrentThreadId() };
             
             Ok(WinThreadId::new(thread_id).expect("thread id should always be nonzero"))
         };
@@ -173,6 +172,8 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         loop {
             let mut msg = MSG::default();
             
+            // SAFETY: msg is non-null & valid to write to (unique ptr due to &mut),
+            // and thread has a message queue to read from
             match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
                 BOOL(0) => {
                     assert_eq!(
@@ -183,8 +184,12 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
                     
                     break Ok(());
                 }
-                BOOL(-1) => break Err(WinErr::from_win32()),
-                bool => unreachable!("message queue should not recv any other messages ({bool:?}, msg: {})", msg.message),
+                BOOL(-1) => match WinErr::from_win32() {
+                    err if err == WinErr::from(ERROR_INVALID_WINDOW_HANDLE) => unreachable!("shouldn't trigger since hwnd is None"),
+                    err if err == WinErr::from(ERROR_INVALID_PARAMETER) => unreachable!("should be calling GetMessageW with correct params"),
+                    err => break Err(err),
+                },
+                bool => unreachable!("message queue should not recv any other messages ({:?}, msg: {})", bool, msg.message),
             }
         }
         
@@ -222,6 +227,7 @@ pub fn unhook() -> Result<(), UnhookError> {
         return Err(UnhookError::HookNotSet);
     };
 
+    // SAFETY: thread is live and has message queue
     match unsafe { PostThreadMessageW(thread_id.get(), WM_QUIT, WPARAM::default(), LPARAM::default()) } {
         Ok(()) => match thread.join() {
             Err(panic) => panic::resume_unwind(panic),
@@ -231,6 +237,7 @@ pub fn unhook() -> Result<(), UnhookError> {
             }
         }
         Err(err) if err == WinErr::from(ERROR_INVALID_THREAD_ID) => panic!("WinHookState::thread should always point to a valid thread"),
+        Err(err) if err == WinErr::from(ERROR_INVALID_PARAMETER) => panic!("WinHookState::thread should always point to a valid thread"),
         Err(err) => Err(UnhookError::QuitMessageQueueError(err)),
     }
 }
