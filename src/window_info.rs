@@ -36,7 +36,8 @@ impl WindowSnapshot {
             Err(WindowSnapshotFromHandleError::InvalidHandle)?
         }
         
-        let (thread_id, process_id) = get_window_thread_process_id(hwnd)?;
+        // SAFETY: hwnd is valid
+        let (thread_id, process_id) = unsafe { get_window_thread_process_id(hwnd)? };
 
         // SAFETY: pid is valid
         let process_handle = unsafe { open_process_handle_limited_query(process_id)? };
@@ -197,7 +198,7 @@ pub type WinThreadId = NonZeroU32;
 pub type WinProcessId = u32;
 
 // SAFETY: hwnd should be a valid window
-fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinProcessId), WinErr> {
+unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinProcessId), WinErr> {
     let mut process_id = 0;
 
     // SAFETY: caller ensures hwnd is valid, process_id is valid, writable, unique (due to &mut)
