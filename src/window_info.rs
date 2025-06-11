@@ -22,10 +22,18 @@ pub struct WindowSnapshot {
     pub integrity_level: IntegrityLevel,
 }
 
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
+pub enum WindowSnapshotFromHandleError {
+    #[error("The handle passed in was invalid")]
+    InvalidHandle,
+    #[error("Windows API error: {0}")]
+    WinErr(#[from] WinErr),
+}
+
 impl WindowSnapshot {
-    pub fn from_hwnd(hwnd: HWND) -> Result<Self, WinErr> {
+    pub fn from_hwnd(hwnd: HWND) -> Result<Self, WindowSnapshotFromHandleError> {
         if !is_valid_window(hwnd) {
-            Err(ERROR_INVALID_WINDOW_HANDLE)?
+            Err(WindowSnapshotFromHandleError::InvalidHandle)?
         }
         
         let (thread_id, process_id) = get_window_thread_process_id(hwnd)?;
