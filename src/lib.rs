@@ -110,7 +110,7 @@ pub struct WinHookState {
 
 pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum TryHookError {
     #[error("Hook already set; no need to set it again.")]
     HookAlreadySet,
@@ -210,7 +210,7 @@ pub fn remove_callback() -> Option<WindowEventCallback> {
     STATE.lock().callback.take()
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum UnhookError {
     #[error("No hook was set yet; call `try_hook()` to set a hook.")]
     HookNotSet,
