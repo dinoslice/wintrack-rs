@@ -1,6 +1,10 @@
+use std::ffi::OsString;
 use std::num::NonZeroU32;
-use windows::Win32::Foundation::{SetLastError, ERROR_INVALID_WINDOW_HANDLE, ERROR_SUCCESS, HWND, RECT};
-use windows::core::Error as WinErr; 
+use std::os::windows::ffi::OsStringExt;
+use std::path::PathBuf;
+use windows::Win32::Foundation::{CloseHandle, SetLastError, ERROR_INVALID_WINDOW_HANDLE, ERROR_SUCCESS, HWND, MAX_PATH, RECT};
+use windows::core::{Error as WinErr, PWSTR};
+use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_NATIVE, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
 use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
@@ -12,6 +16,7 @@ pub struct WindowSnapshot {
     pub process_id: WinProcessId,
     pub is_minimized: bool,
     pub is_foreground: bool,
+    pub executable: PathBuf,
 }
 
 impl WindowSnapshot {
@@ -26,6 +31,7 @@ impl WindowSnapshot {
             process_id,
             is_minimized: is_window_minimized(hwnd).ok_or(WinErr::from(ERROR_INVALID_WINDOW_HANDLE))?,
             is_foreground: is_window_foreground(hwnd).ok_or(WinErr::from(ERROR_INVALID_WINDOW_HANDLE))?,
+            executable: get_process_executable_path(process_id)?,
         })
     }
 }
@@ -136,6 +142,20 @@ fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinProcessId
         Some(thread_id) => Ok((thread_id, process_id)),
         None => Err(WinErr::from_win32()),
     }
+}
+
+fn get_process_executable_path(pid: WinProcessId) -> Result<PathBuf, WinErr> {
+    let process_handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid)? };
+
+    let mut buffer = [0u16; MAX_PATH as _];
+
+    let mut chars = buffer.len() as _;
+
+    unsafe { QueryFullProcessImageNameW(process_handle, PROCESS_NAME_WIN32, PWSTR(buffer.as_mut_ptr()), &mut chars)? };
+
+    unsafe { CloseHandle(process_handle)? };
+
+    Ok(PathBuf::from(OsString::from_wide(&buffer[..chars as _])))
 }
 
 fn is_window_minimized(hwnd: HWND) -> Option<bool> {
