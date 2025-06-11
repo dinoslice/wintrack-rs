@@ -1,4 +1,6 @@
+use std::borrow::Cow;
 use std::ffi::OsString;
+use std::fmt;
 use std::num::NonZeroU32;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
@@ -214,40 +216,31 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
-pub enum IntegrityLevel {
-    Low,
-    Medium,
-    MediumUiAccess,
-    High,
-    System,
-    Protected,
-    Other(u32),
-}
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+pub struct IntegrityLevel(pub u32);
 
 impl IntegrityLevel {
-    pub fn from_rid(rid: u32) -> Self {
-        match rid {
-            0x1000 => IntegrityLevel::Low,
-            0x2000 => IntegrityLevel::Medium,
-            0x2100 => IntegrityLevel::MediumUiAccess,
-            0x3000 => IntegrityLevel::High,
-            0x4000 => IntegrityLevel::System,
-            0x5000 => IntegrityLevel::Protected,
-            other => IntegrityLevel::Other(other),
-        }
-    }
+    pub const LOW: Self = Self(0x1000);
+    pub const MEDIUM: Self = Self(0x2000);
+    pub const MEDIUM_UI_ACCESS: Self = Self(0x2100);
+    pub const HIGH: Self = Self(0x3000);
+    pub const SYSTEM: Self = Self(0x4000);
+    pub const PROTECTED: Self = Self(0x5000);
+}
 
-    pub fn rid(&self) -> u32 {
-        match *self {
-            IntegrityLevel::Low => 0x1000,
-            IntegrityLevel::Medium => 0x2000,
-            IntegrityLevel::MediumUiAccess => 0x2100,
-            IntegrityLevel::High => 0x3000,
-            IntegrityLevel::System => 0x4000,
-            IntegrityLevel::Protected => 0x5000,
-            IntegrityLevel::Other(value) => value,
-        }
+impl fmt::Debug for IntegrityLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let field = match *self {
+            Self::LOW => "Low (0x1000)".into(), 
+            Self::MEDIUM => "Medium (0x2000)".into(), 
+            Self::MEDIUM_UI_ACCESS => "Medium (with ui access) (0x2100)".into(), 
+            Self::HIGH => "High (0x3000)".into(), 
+            Self::SYSTEM => "System (0x4000)".into(), 
+            Self::PROTECTED => "Protected (0x5000)".into(), 
+            Self(rid) => Cow::Owned(rid.to_string()),
+        };
+
+        f.debug_tuple(&field).finish()
     }
 }
 
@@ -325,7 +318,7 @@ unsafe fn get_process_integrity_level(process_handle: HANDLE) -> Result<Integrit
     // SAFETY: handle should be valid, and if not, would've errored already
     unsafe { CloseHandle(token_handle).expect("handle should be valid"); }
     
-    Ok(IntegrityLevel::from_rid(rid))
+    Ok(IntegrityLevel(rid))
 }
 
 
