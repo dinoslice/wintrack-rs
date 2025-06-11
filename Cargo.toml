@@ -7,4 +7,4 @@ edition = "2024"
 oneshot = "0.1.11"
 parking_lot = "0.12.4"
 thiserror = "2.0.12"
-windows = { version = "0.61.1", features = ["Win32_UI_Accessibility", "Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_Threading"] }
+windows = { version = "0.61.1", features = ["Win32_UI_Accessibility", "Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_Threading", "Win32_Security"] }
