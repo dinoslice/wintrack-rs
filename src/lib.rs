@@ -29,6 +29,16 @@ pub enum WindowEventKind {
 }
 
 impl WindowEventKind {
+    pub(crate) const ALL: [Self; 7] = [
+        Self::ForegroundWindowChanged,
+        Self::WindowNameChanged,
+        Self::WindowBecameVisible,
+        Self::WindowBecameHidden,
+        Self::WindowCreated,
+        Self::WindowDestroyed,
+        Self::WindowMovedOrResized,
+    ];
+    
     pub(crate) fn from_event_constant(event: u32) -> Option<Self> {
         let ret = match event {
             EVENT_SYSTEM_FOREGROUND => Some(Self::ForegroundWindowChanged),
@@ -130,9 +140,14 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
     let (tx, rx) = oneshot::channel();
 
     let handle = std::thread::spawn(move || unsafe {
+        let event_const = WindowEventKind::ALL.map(WindowEventKind::event_constant);
+        
+        let min = *event_const.iter().min().expect("should be at least one event kind");
+        let max = *event_const.iter().max().expect("should be at least one event kind");
+        
         let hook = SetWinEventHook(
-            EVENT_OBJECT_NAMECHANGE,
-            EVENT_OBJECT_NAMECHANGE,
+            min,
+            max,
             None,
             Some(win_event_proc),
             0,
