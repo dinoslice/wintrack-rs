@@ -76,6 +76,16 @@ pub struct WindowSnapshot {
     /// assert!(snapshot.is_foreground);
     /// ```
     pub is_foreground: bool,
+    /// If the window is visible (at time of snapshot)
+    ///
+    /// # Examples:
+    /// ```ignore
+    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// let WindowEvent { kind, snapshot } = todo!();
+    /// assert_eq!(kind, WindowEventKind::WindowBecameHidden);
+    /// assert!(!snapshot.is_visible);
+    /// ```
+    pub is_visible: bool,
     /// Path to the executable of the window.
     ///
     /// # Examples:
@@ -138,6 +148,7 @@ impl WindowSnapshot {
                 process_id,
                 is_minimized: is_window_minimized(hwnd),
                 is_foreground: is_window_foreground(hwnd),
+                is_visible: is_window_visible(hwnd),
                 executable: get_process_executable_path(process_handle)?,
                 integrity_level: get_process_integrity_level(process_handle)?,
             }
