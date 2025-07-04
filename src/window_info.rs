@@ -361,6 +361,5 @@ unsafe fn is_window_visible(hwnd: HWND) -> bool {
 // SAFETY: hwnd should be a valid window
 unsafe fn is_window_foreground(hwnd: HWND) -> bool {
     // SAFETY: caller ensures hwnd is a valid window
-    //
     hwnd == unsafe { GetForegroundWindow() }
 }
