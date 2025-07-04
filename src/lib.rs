@@ -108,7 +108,7 @@ pub struct WinHookState {
     pub thread: Option<(JoinHandle<Result<(), WinErr>>, WinThreadId)>,
 }
 
-pub static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
+static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
 
 #[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum TryHookError {
