@@ -17,7 +17,7 @@ use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow
 /// You can also create a snapshot from a [`HWND`](windows::Win32::Foundation::HWND) using [`Self::from_hwnd`](WindowSnapshot::from_hwnd).
 ///
 /// # Examples
-/// ```ignore
+/// ```no_run
 /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
 /// window_events::set_callback(Box::new(|event: WindowEvent| {
 ///     // every event has a snapshot of the window's current state
@@ -35,7 +35,7 @@ pub struct WindowSnapshot {
     /// The title of the window
     ///
     /// # Examples:
-    /// ```ignore
+    /// ```no_run
     /// # use window_events::WindowSnapshot;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.title, "Firefox");
@@ -44,7 +44,7 @@ pub struct WindowSnapshot {
     /// The [class name](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-window-classes) of the window
     ///
     /// # Examples:
-    /// ```
+    /// ```no_run
     /// # use window_events::WindowSnapshot;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.class_name, "MozillaWindowClass");
@@ -59,7 +59,7 @@ pub struct WindowSnapshot {
     /// If the window was minimized (at time of snapshot)
     /// 
     /// # Examples:
-    /// ```ignore
+    /// ```no_run
     /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::WindowBecameVisible);
@@ -69,7 +69,7 @@ pub struct WindowSnapshot {
     /// If the window was the foreground window (at time of snapshot)
     ///
     /// # Examples:
-    /// ```ignore
+    /// ```no_run
     /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::ForegroundWindowChanged);
@@ -79,7 +79,7 @@ pub struct WindowSnapshot {
     /// If the window is visible (at time of snapshot)
     ///
     /// # Examples:
-    /// ```ignore
+    /// ```no_run
     /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::WindowBecameHidden);
@@ -89,7 +89,7 @@ pub struct WindowSnapshot {
     /// Path to the executable of the window.
     ///
     /// # Examples:
-    /// ```ignore
+    /// ```no_run
     /// # use window_events::WindowSnapshot;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.executable, PathBuf::from(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
@@ -116,7 +116,7 @@ impl WindowSnapshot {
     /// Create a snapshot of the window pointed to by `hwnd`.
     /// 
     /// # Example:
-    /// ```ignore
+    /// ```no_run
     /// # use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
     /// # use window_events::WindowSnapshot;
     /// // SAFETY: this function (from Win32 API) is always safe to call
@@ -310,7 +310,7 @@ unsafe fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
 /// Windows thread id, notably *not* [`std::thread::ThreadId`].
 ///
 /// # Examples:
-/// ```ignore
+/// ```no_run
 /// # use window_events::WindowSnapshot;
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// let thread_id = WinThreadId::new(335364).expect("nonzero!");
@@ -321,7 +321,7 @@ pub type WinThreadId = NonZeroU32;
 /// Windows process id.
 ///
 /// # Examples:
-/// ```ignore
+/// ```no_run
 /// # use window_events::WindowSnapshot;
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// assert_eq!(browser_snapshot.process_id, 340304);
@@ -348,7 +348,7 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
 /// A process [integrity level](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control).
 ///
 /// # Examples:
-/// ```ignore
+/// ```no_run
 /// # use window_events::{IntegrityLevel, WindowSnapshot};
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// assert_eq!(browser_snapshot.integrity_level, IntegrityLevel::MEDIUM);
