@@ -91,6 +91,7 @@ pub struct WindowSnapshot {
     /// # Examples:
     /// ```no_run
     /// # use window_events::WindowSnapshot;
+    /// # use std::path::PathBuf;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.executable, PathBuf::from(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
     /// ```
@@ -311,7 +312,7 @@ unsafe fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
 ///
 /// # Examples:
 /// ```no_run
-/// # use window_events::WindowSnapshot;
+/// # use window_events::{WindowSnapshot, WinThreadId};
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// let thread_id = WinThreadId::new(335364).expect("nonzero!");
 /// assert_eq!(browser_snapshot.thread_id, thread_id);
