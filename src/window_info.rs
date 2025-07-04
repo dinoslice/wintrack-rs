@@ -11,28 +11,112 @@ use windows::Win32::Security::{GetSidSubAuthority, GetSidSubAuthorityCount, GetT
 use windows::Win32::System::Threading::{OpenProcess, OpenProcessToken, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
 use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible};
 
+/// Captures various properties of a window's current state.
+///
+/// Most likely, you'll get a snapshot from the callback set by [`set_callback`](crate::set_callback).
+/// You can also create a snapshot from a [`HWND`](windows::Win32::Foundation::HWND) using [`Self::from_hwnd`](WindowSnapshot::from_hwnd).
+///
+/// # Examples
+/// ```ignore
+/// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+/// window_events::set_callback(Box::new(|event: WindowEvent| {
+///     // every event has a snapshot of the window's current state
+///     let snapshot: WindowSnapshot = event.snapshot;
+///     assert_eq!(snapshot.title, "Firefox");
+///     assert_eq!(snapshot.class_name, "MozillaWindowClass");
+///
+///     if event.kind == WindowEventKind::ForegroundWindowChanged {
+///         assert!(snapshot.is_foreground);
+///     }
+/// }));
+/// ```
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct WindowSnapshot {
+    /// The title of the window
+    ///
+    /// # Examples:
+    /// ```ignore
+    /// # use window_events::WindowSnapshot;
+    /// let browser_snapshot: WindowSnapshot = todo!();
+    /// assert_eq!(browser_snapshot.title, "Firefox");
+    /// ```
     pub title: String,
+    /// The [class name](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-window-classes) of the window
+    ///
+    /// # Examples:
+    /// ```
+    /// # use window_events::WindowSnapshot;
+    /// let browser_snapshot: WindowSnapshot = todo!();
+    /// assert_eq!(browser_snapshot.class_name, "MozillaWindowClass");
+    /// ```
     pub class_name: String,
+    /// Rectangle of the window's position on screen.
     pub rect: WindowRect,
+    /// The id of the thread that created this window.
     pub thread_id: WinThreadId,
+    /// The id of the process that created this window.
     pub process_id: WinProcessId,
+    /// If the window was minimized (at time of snapshot)
+    /// 
+    /// # Examples:
+    /// ```ignore
+    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// let WindowEvent { kind, snapshot } = todo!();
+    /// assert_eq!(kind, WindowEventKind::WindowBecameVisible);
+    /// assert!(!snapshot.is_minimized);
+    /// ```
     pub is_minimized: bool,
+    /// If the window was the foreground window (at time of snapshot)
+    ///
+    /// # Examples:
+    /// ```ignore
+    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// let WindowEvent { kind, snapshot } = todo!();
+    /// assert_eq!(kind, WindowEventKind::ForegroundWindowChanged);
+    /// assert!(snapshot.is_foreground);
+    /// ```
     pub is_foreground: bool,
+    /// Path to the executable of the window.
+    ///
+    /// # Examples:
+    /// ```ignore
+    /// # use window_events::WindowSnapshot;
+    /// let browser_snapshot: WindowSnapshot = todo!();
+    /// assert_eq!(browser_snapshot.executable, PathBuf::from(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
+    /// ```
     pub executable: PathBuf,
+    /// The [integrity level](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control) of the window.
     pub integrity_level: IntegrityLevel,
 }
 
+/// Error returned by [WindowSnapshot::from_hwnd].
+/// 
+/// Most likely, this is caused by an invalid handle, but in rare cases an error from the Win32 API may occur.
 #[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum WindowSnapshotFromHandleError {
+    /// The handle given was invalid.
     #[error("The handle passed in was invalid")]
     InvalidHandle,
+    /// Internal error from Win32 API.
     #[error("Windows API error: {0}")]
     WinErr(#[from] WinErr),
 }
 
 impl WindowSnapshot {
+    /// Create a snapshot of the window pointed to by `hwnd`.
+    /// 
+    /// # Example:
+    /// ```ignore
+    /// # use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+    /// # use window_events::WindowSnapshot;
+    /// // SAFETY: this function (from Win32 API) is always safe to call
+    /// let hwnd = unsafe { GetForegroundWindow() };
+    ///
+    /// let foreground = WindowSnapshot::from_hwnd(hwnd).expect("valid hwnd");
+    /// ```
+    /// # Errors:
+    /// Returns [`WindowSnapshotFromHandleError::InvalidHandle`] is `hwnd` is invalid.
+    /// If an internal error happens with the Win32 API, [`WindowSnapshotFromHandleError::WinErr`] is returned.
     pub fn from_hwnd(hwnd: HWND) -> Result<Self, WindowSnapshotFromHandleError> {
         if !is_valid_window(hwnd) {
             Err(WindowSnapshotFromHandleError::InvalidHandle)?
@@ -132,15 +216,25 @@ unsafe fn get_window_class_name(hwnd: HWND) -> Result<String, WinErr> {
     }
 }
 
+/// Rectangle of the window's position on screen.
+///
+/// All four fields can be negative, usually for windows on monitors left or above of the main monitor.
+/// Additionally, `left <= right && top <= bottom` is always guaranteed to be true.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct WindowRect {
+    /// x-value of window's left edge
     left: i32,
+    /// y-value of window's top edge
     top: i32,
+    /// x-value of window's right edge
     right: i32,
+    /// y-value of window's bottom edge
     bottom: i32,
 }
 
 impl WindowRect {
+    /// Creates a `WindowRect`.
+    /// `left <= right && top <= bottom` must be true, else `None` is returned.
     pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Option<Self> {
         if left <= right && top <= bottom {
             Some(Self { left, top, right, bottom })
@@ -149,26 +243,32 @@ impl WindowRect {
         }
     }
     
+    /// Get the x-value of window's left edge. Potentially negative.
     pub fn left(self) -> i32 {
         self.left
     }
 
+    /// Get the y-value of window's top edge. Potentially negative.
     pub fn top(self) -> i32 {
         self.top
     }
 
+    /// Get the x-value of window's right edge. Potentially negative.
     pub fn right(self) -> i32 {
         self.right
     }
 
+    /// Get the y-value of window's bottom edge. Potentially negative.
     pub fn bottom(self) -> i32 {
         self.bottom
     }
     
+    /// Get the top left corner of the window, `(x, y)`.
     pub fn top_left(self) -> (i32, i32) {
         (self.left, self.top)
     }
     
+    /// Get the size of the window, `(x, y)`.
     pub fn size(self) -> (u32, u32) {
         let width = self.right - self.left;
         
@@ -196,7 +296,25 @@ unsafe fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
     Ok(rect)
 }
 
+/// Windows thread id, notably *not* [`std::thread::ThreadId`].
+///
+/// # Examples:
+/// ```ignore
+/// # use window_events::WindowSnapshot;
+/// let browser_snapshot: WindowSnapshot = todo!();
+/// let thread_id = WinThreadId::new(335364).expect("nonzero!");
+/// assert_eq!(browser_snapshot.thread_id, thread_id);
+/// ```
 pub type WinThreadId = NonZeroU32;
+
+/// Windows process id.
+///
+/// # Examples:
+/// ```ignore
+/// # use window_events::WindowSnapshot;
+/// let browser_snapshot: WindowSnapshot = todo!();
+/// assert_eq!(browser_snapshot.process_id, 340304);
+/// ```
 pub type WinProcessId = u32;
 
 // SAFETY: hwnd should be a valid window
@@ -216,6 +334,14 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
     }
 }
 
+/// A process [integrity level](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control).
+///
+/// # Examples:
+/// ```ignore
+/// # use window_events::{IntegrityLevel, WindowSnapshot};
+/// let browser_snapshot: WindowSnapshot = todo!();
+/// assert_eq!(browser_snapshot.integrity_level, IntegrityLevel::MEDIUM);
+/// ```
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct IntegrityLevel(pub u32);
 
