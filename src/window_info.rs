@@ -358,12 +358,19 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
 pub struct IntegrityLevel(pub u32);
 
 impl IntegrityLevel {
+    /// Untrusted integrity level, processes initiated by anonymous or guest users
     pub const UNTRUSTED: Self = Self(0);
+    /// Low integrity level, used commonly by AppContainers
     pub const LOW: Self = Self(0x1000);
+    /// Medium integrity level, for authenticated users
     pub const MEDIUM: Self = Self(0x2000);
+    /// Medium-plus integrity level, possibly for UI access
     pub const MEDIUM_UI_ACCESS: Self = Self(0x2100);
+    /// High integrity level, elevated processes, programs launched as administrator
     pub const HIGH: Self = Self(0x3000);
+    /// System integrity level, admin level processes, core OS processes, Windows services
     pub const SYSTEM: Self = Self(0x4000);
+    /// Protected integrity level, DRM-protected or anti-malware
     pub const PROTECTED: Self = Self(0x5000);
 }
 
