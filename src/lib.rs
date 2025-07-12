@@ -122,8 +122,8 @@ unsafe extern "system" fn win_event_proc(
         
         let snapshot = match WindowSnapshot::from_hwnd(hwnd) {
             Ok(snapshot) => snapshot,
-            Err(err) => {
-                eprintln!("{err}"); // TODO: log error!
+            Err(_err) => {
+                // eprintln!("{err}"); // TODO: log error!
                 return;
             }
         };
