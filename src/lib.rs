@@ -304,16 +304,30 @@ pub fn remove_callback() -> Option<WindowEventCallback> {
     STATE.lock().callback.take()
 }
 
+/// Error returned by [`unhook`].
+///
+/// Most likely, this will be caused by attempting to unhook when no hook is sent.
+/// However, this can also error if there was a Win32 API error relating to the message queue.
 #[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum UnhookError {
+    /// No hook was set yet. To set a hook, use [`try_hook`].
     #[error("No hook was set yet; call `try_hook()` to set a hook.")]
     HookNotSet,
+    /// There was an error on the spawned hook thread (the thread that listens for events)
+    /// relating to the setup or shutdown of the event queue.
     #[error("The hook thread failed: {0}")]
     HookThreadError(WinErr),
+    /// There was an error with instructing the hook thread (thread that listens for events)
+    /// to quit. The [`unhook`] function failed to send [`WM_QUIT`].
     #[error("Failed to quit to the hook thread (failed to send WM_QUIT): {0}")]
     QuitMessageQueueError(WinErr),
 }
 
+/// Removes window event monitoring hook.
+/// 
+/// This function stops the thread that listens for [window events](WindowEvent).
+/// This *does not* call [`remove_callback`] to remove the set callback, but there's no harm in leaving it set.
+/// If a hook isn't set yet, this will return [`UnhookError::HookNotSet`].
 pub fn unhook() -> Result<(), UnhookError> {
     let mut state = STATE.lock();
 
