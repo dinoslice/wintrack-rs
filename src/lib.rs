@@ -143,15 +143,25 @@ struct WinHookState {
 
 static STATE: Mutex<WinHookState> = Mutex::new(WinHookState { callback: None, thread: None });
 
+/// Error returned by [`try_hook`].
+///
+/// Most likely, this will be caused by attempting to hook when a hook is already set,
+/// but in rare cases an error from the Win32 API may occur.
 #[derive(Debug, thiserror::Error, Eq, PartialEq)]
 pub enum TryHookError {
+    /// A hook was already previously set by this process.
+    /// To set another hook, first [unhook the previously set hook](unhook).
     #[error("Hook already set; no need to set it again.")]
     HookAlreadySet,
+    /// Internal error from Win32 API.
     #[error("Failed to set hook: {0}")]
     FailedToSetHook(WinErr),
 }
 
-
+/// Attempts to install a hook for monitoring [window events](WindowEvent).
+///
+/// Near this call (either before or after), you probably want to call [`set_callback`] to do something whenever the hook receives an event.
+/// Only one hook can be set at a time; attempting to set another hook will return [`TryHookError::HookAlreadySet`].
 pub fn try_hook() -> Result<(), TryHookError> {
     let mut state = STATE.lock();
 
