@@ -12,6 +12,7 @@ authors = [
     "abscosmos <joshua@dinoslice.com>",
 ]
 #homepage = "https://dinoslice.com/projects/..."
+homepage = "https://github.com/dinoslice/wintrack-rs"
 repository = "https://github.com/dinoslice/wintrack-rs"
 edition = "2024"
 
