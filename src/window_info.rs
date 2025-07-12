@@ -245,7 +245,7 @@ pub struct WindowRect {
 
 impl WindowRect {
     /// Creates a `WindowRect`.
-    /// `left <= right && top <= bottom` must be true, else `None` is returned.
+    /// `left <= right && top <= bottom` must be true, else [`None`] is returned.
     pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Option<Self> {
         if left <= right && top <= bottom {
             Some(Self { left, top, right, bottom })
