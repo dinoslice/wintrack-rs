@@ -372,6 +372,8 @@ impl IntegrityLevel {
     pub const SYSTEM: Self = Self(0x4000);
     /// Protected integrity level, DRM-protected or anti-malware
     pub const PROTECTED: Self = Self(0x5000);
+    /// Secure integrity level, internal kernel processes
+    pub const SECURE: Self = Self(0x7000);
 }
 
 impl fmt::Debug for IntegrityLevel {
@@ -383,7 +385,8 @@ impl fmt::Debug for IntegrityLevel {
             Self::MEDIUM_UI_ACCESS => "Medium (with ui access) (0x2100)".into(), 
             Self::HIGH => "High (0x3000)".into(), 
             Self::SYSTEM => "System (0x4000)".into(), 
-            Self::PROTECTED => "Protected (0x5000)".into(), 
+            Self::PROTECTED => "Protected (0x5000)".into(),
+            Self::SECURE => "Secure (0x7000)".into(),
             Self(rid) => Cow::Owned(rid.to_string()),
         };
 
