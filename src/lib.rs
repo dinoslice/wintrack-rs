@@ -41,14 +41,24 @@ pub struct WindowEvent {
     pub snapshot: WindowSnapshot,
 }
 
+/// The kind of the event that occurred for a window.
+/// 
+/// Each corresponds to a [Windows event constant](https://learn.microsoft.com/en-us/windows/win32/winauto/event-constants). 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum WindowEventKind {
+    /// The foreground (active) window changed. (`EVENT_SYSTEM_FOREGROUND`)
     ForegroundWindowChanged,
+    /// The window title or name changed. (`EVENT_OBJECT_NAMECHANGE`)
     WindowNameChanged,
+    /// The window became visible (shown / unminimized / moved onscreen). (`EVENT_OBJECT_SHOW`)
     WindowBecameVisible,
+    /// The window became hidden (hidden / minimized / moved offscreen). (`EVENT_OBJECT_HIDE`)
     WindowBecameHidden,
+    /// A new window was created. (`EVENT_OBJECT_CREATE`)
     WindowCreated,
+    /// A window was destroyed or closed. (`EVENT_OBJECT_DESTROY`)
     WindowDestroyed,
+    /// A window was moved or resized. (`EVENT_OBJECT_LOCATIONCHANGE`)
     WindowMovedOrResized,
 }
 
