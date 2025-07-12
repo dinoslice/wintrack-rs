@@ -99,7 +99,7 @@ pub struct WindowSnapshot {
     pub integrity_level: IntegrityLevel,
 }
 
-/// Error returned by [WindowSnapshot::from_hwnd].
+/// Error returned by [`WindowSnapshot::from_hwnd`].
 /// 
 /// Most likely, this is caused by an invalid handle, but in rare cases an error from the Win32 API may occur.
 #[derive(Debug, thiserror::Error, Eq, PartialEq)]
