@@ -358,6 +358,7 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
 pub struct IntegrityLevel(pub u32);
 
 impl IntegrityLevel {
+    pub const UNTRUSTED: Self = Self(0);
     pub const LOW: Self = Self(0x1000);
     pub const MEDIUM: Self = Self(0x2000);
     pub const MEDIUM_UI_ACCESS: Self = Self(0x2100);
@@ -369,6 +370,7 @@ impl IntegrityLevel {
 impl fmt::Debug for IntegrityLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let field = match *self {
+            Self::UNTRUSTED => "Untrusted (0x0000)".into(),
             Self::LOW => "Low (0x1000)".into(), 
             Self::MEDIUM => "Medium (0x2000)".into(), 
             Self::MEDIUM_UI_ACCESS => "Medium (with ui access) (0x2100)".into(), 
