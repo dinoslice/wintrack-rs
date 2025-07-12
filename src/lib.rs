@@ -58,7 +58,7 @@ pub use window_info::*;
 /// Represents an event related to a window, like becoming foreground or title change,
 /// along with a [snapshot](WindowSnapshot) of the window when the event occurred.
 ///
-/// Most likely, you'll get a window event from the callback set by [`set_callback`](set_callback).
+/// Most likely, you'll get a window event from the callback set by [`set_callback`].
 ///
 /// # Examples
 /// ```no_run
