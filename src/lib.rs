@@ -233,10 +233,63 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         .map(|id| (handle, id))
 }
 
+/// Sets the callback called when a window event occurs.
+///
+/// This function is how you can define what should happen upon a window event.
+/// Returns a previously set callback if it exists.
+///
+/// If you need to listen for the events in another location in your program,
+/// or need to collect them, you might want to set up a [channel](std::sync::mpsc).
+///
+/// # Examples
+/// Debug print all* events:
+/// ```no_run
+/// window_events::set_callback(Box::new(|evt| {
+///     // ignore events from zero-sized windows or windows with no title
+///     if evt.snapshot.rect.size() != (0, 0) && !evt.snapshot.title.is_empty() {
+///         dbg!(evt.snapshot);
+///     }
+/// }));
+/// ```
+/// Using a channel:
+/// ```no_run
+/// # use std::ffi::OsStr;
+/// # use window_events::WindowEventKind;
+/// use std::sync::mpsc;
+///
+/// window_events::try_hook().expect("hook should not be set yet");
+///
+/// let (tx, rx) = mpsc::channel();
+///
+/// window_events::set_callback(Box::new(move |event| {
+///     let snapshot_exe = event.snapshot.executable.file_name();
+///     let is_firefox = snapshot_exe == Some(OsStr::new("firefox.exe"));
+///
+///     // only monitor name change events from Firefox
+///     // (this checks when the tab changes)
+///     if is_firefox && event.kind == WindowEventKind::WindowNameChanged {
+///         // send the event to the main thread
+///         let res = tx.send(event.snapshot);
+///
+///         if let Err(err) = res {
+///             // ...
+///  #          _ = err;
+///         }
+///     }
+/// }));
+///
+/// while let Ok(browser_snapshot) = rx.recv() {
+///     // ...
+/// #   _ = browser_snapshot;
+/// }
+/// ```
 pub fn set_callback(callback: WindowEventCallback) -> Option<WindowEventCallback> {
     STATE.lock().callback.replace(callback)
 }
 
+/// Removes & returns the currently set callback if it exists.
+/// 
+/// A callback can be set using [`set_callback`].
 pub fn remove_callback() -> Option<WindowEventCallback> {
     STATE.lock().callback.take()
 }
