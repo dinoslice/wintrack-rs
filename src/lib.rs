@@ -244,7 +244,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         .map(|id| (handle, id))
 }
 
-/// Sets the callback called when a window event occurs.
+/// Sets the callback called when a [window event](WindowEvent) occurs.
 ///
 /// This function is how you can define what should happen upon a window event.
 /// Returns a previously set callback if it exists.
