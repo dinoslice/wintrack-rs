@@ -125,7 +125,7 @@ impl WindowSnapshot {
     /// let foreground = WindowSnapshot::from_hwnd(hwnd).expect("valid hwnd");
     /// ```
     /// # Errors:
-    /// Returns [`WindowSnapshotFromHandleError::InvalidHandle`] is `hwnd` is invalid.
+    /// Returns [`WindowSnapshotFromHandleError::InvalidHandle`] is `hwnd` if invalid.
     /// If an internal error happens with the Win32 API, [`WindowSnapshotFromHandleError::WinErr`] is returned.
     pub fn from_hwnd(hwnd: HWND) -> Result<Self, WindowSnapshotFromHandleError> {
         if !is_valid_window(hwnd) {
