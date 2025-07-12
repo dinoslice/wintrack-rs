@@ -2,7 +2,7 @@
 name = "wintrack"
 version = "1.0.0"
 description = "Library for monitoring window related events on Windows."
-#readme = true
+readme = true
 license = "MIT OR Apache-2.0"
 keywords = ["windows", "events", "windowing"]
 categories = ["os::windows-apis", "api-bindings"]
@@ -12,7 +12,7 @@ authors = [
     "abscosmos <joshua@dinoslice.com>",
 ]
 #homepage = "https://dinoslice.com/projects/..."
-#repository = "https://github.com/dinoslice/wintrack-rs"
+repository = "https://github.com/dinoslice/wintrack-rs"
 edition = "2024"
 
 [dependencies]
