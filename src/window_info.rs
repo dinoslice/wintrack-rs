@@ -12,8 +12,8 @@ use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow
 
 /// Captures various properties of a window's current state.
 ///
-/// Most likely, you'll get a snapshot from the callback set by [`set_callback`](crate::set_callback).
-/// You can also create a snapshot from a [`HWND`](windows::Win32::Foundation::HWND) using [`Self::from_hwnd`](WindowSnapshot::from_hwnd).
+/// Most likely, you'll get a snapshot from a [`WindowEvent`](crate::WindowEvent) from the callback set by [`set_callback`](crate::set_callback).
+/// You can also create a snapshot from a [`HWND`](HWND) using [`Self::from_hwnd`](WindowSnapshot::from_hwnd).
 ///
 /// # Examples
 /// ```no_run
