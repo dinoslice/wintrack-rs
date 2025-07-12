@@ -134,6 +134,7 @@ unsafe extern "system" fn win_event_proc(
     }
 }
 
+/// A boxed closure/function pointer that provides [`WindowEvent`]s.
 pub type WindowEventCallback = Box<dyn Fn(WindowEvent) + Send>;
 
 struct WinHookState {
