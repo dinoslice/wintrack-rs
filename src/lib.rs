@@ -36,7 +36,7 @@
 //! ```no_run
 //! window_events::unhook().expect("should have set hook earlier")
 //! ```
-//! 
+//!
 //! For an example of using a channel to collect events or listen for events in another location of your program,
 //! see the example in the documentation for [`set_callback`].
 
@@ -54,12 +54,12 @@ mod window_info;
 pub use window_info::*;
 
 /// A window event.
-/// 
+///
 /// Represents an event related to a window, like becoming foreground or title change,
 /// along with a [snapshot](WindowSnapshot) of the window when the event occurred.
-/// 
+///
 /// Most likely, you'll get a window event from the callback set by [`set_callback`](set_callback).
-/// 
+///
 /// # Examples
 /// ```no_run
 /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
@@ -68,7 +68,7 @@ pub use window_info::*;
 ///     let snapshot: WindowSnapshot = event.snapshot;
 ///     assert_eq!(snapshot.title, "Firefox");
 ///     assert_eq!(snapshot.class_name, "MozillaWindowClass");
-/// 
+///
 ///     // ... and the kind of event that caused it
 ///     if event.kind == WindowEventKind::ForegroundWindowChanged {
 ///         assert!(snapshot.is_foreground);
@@ -84,7 +84,7 @@ pub struct WindowEvent {
 }
 
 /// The kind of the event that occurred for a window.
-/// 
+///
 /// Each corresponds to a [Windows event constant](https://learn.microsoft.com/en-us/windows/win32/winauto/event-constants). 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum WindowEventKind {
@@ -114,7 +114,7 @@ impl WindowEventKind {
         Self::WindowDestroyed,
         Self::WindowMovedOrResized,
     ];
-    
+
     pub(crate) fn from_event_constant(event: u32) -> Option<Self> {
         let ret = match event {
             EVENT_SYSTEM_FOREGROUND => Some(Self::ForegroundWindowChanged),
@@ -126,15 +126,15 @@ impl WindowEventKind {
             EVENT_OBJECT_LOCATIONCHANGE => Some(Self::WindowMovedOrResized),
             _ => None,
         };
-        
+
         // FIXME: move this to a test
         if let Some(ret) = ret {
             debug_assert_eq!(ret.event_constant(), event);
         }
-        
+
         ret
     }
-    
+
     pub(crate) fn event_constant(self) -> u32 {
         match self {
             Self::ForegroundWindowChanged => EVENT_SYSTEM_FOREGROUND,
@@ -161,7 +161,7 @@ unsafe extern "system" fn win_event_proc(
         let Some(kind) = WindowEventKind::from_event_constant(event) else {
             return;
         };
-        
+
         let snapshot = match WindowSnapshot::from_hwnd(hwnd) {
             Ok(snapshot) => snapshot,
             Err(_err) => {
@@ -169,7 +169,7 @@ unsafe extern "system" fn win_event_proc(
                 return;
             }
         };
-        
+
         if let Some(callback) = &STATE.lock().callback {
             callback(WindowEvent { kind, snapshot });
         }
@@ -227,7 +227,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 
     let handle = std::thread::spawn(move || {
         let event_const = WindowEventKind::ALL.map(WindowEventKind::event_constant);
-        
+
         let min = *event_const.iter().min().expect("should be at least one event kind");
         let max = *event_const.iter().max().expect("should be at least one event kind");
 
@@ -249,14 +249,14 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
         } else {
             // SAFETY: always safe to call
             let thread_id = unsafe { GetCurrentThreadId() };
-            
+
             Ok(WinThreadId::new(thread_id).expect("thread id should always be nonzero"))
         };
 
         tx.send(res).expect("rx should still exist");
-        
+
         let mut msg = MSG::default();
-        
+
         // SAFETY: msg is non-null & valid to write to (unique ptr due to &mut),
         // and thread has a message queue to read from
         match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
@@ -266,7 +266,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
                     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagew
                     "If the function retrieves a message other than WM_QUIT, the return value is nonzero."
                 );
-                
+
                 Ok(())
             }
             BOOL(-1) => match WinErr::from_win32() {
@@ -276,7 +276,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
             },
             bool => unreachable!("message queue should not recv any other messages ({:?}, msg: {})", bool, msg.message),
         }
-        
+
         // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwinevent
         // "If the client's thread ends, the system automatically calls [UnhookWinEvent]"
     });
@@ -293,10 +293,10 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 ///
 /// If you need to listen for the events in another location in your program,
 /// or need to collect them, you might want to set up a [channel](std::sync::mpsc).
-/// 
+///
 /// # Panics
 /// If the callback provided ever panics, the program will panic as expected.
-/// 
+///
 /// # Examples
 /// Debug print all* events:
 /// ```no_run
@@ -344,7 +344,7 @@ pub fn set_callback(callback: WindowEventCallback) -> Option<WindowEventCallback
 }
 
 /// Removes & returns the currently set callback if it exists.
-/// 
+///
 /// A callback can be set using [`set_callback`].
 pub fn remove_callback() -> Option<WindowEventCallback> {
     STATE.lock().callback.take()
@@ -370,7 +370,7 @@ pub enum UnhookError {
 }
 
 /// Removes window event monitoring hook.
-/// 
+///
 /// This function stops the thread that listens for [window events](WindowEvent).
 /// This *does not* call [`remove_callback`] to remove the set callback, but there's no harm in leaving it set.
 /// If a hook isn't set yet, this will return [`UnhookError::HookNotSet`].
