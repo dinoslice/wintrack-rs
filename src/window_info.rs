@@ -365,7 +365,7 @@ impl IntegrityLevel {
     /// Medium integrity level, for authenticated users
     pub const MEDIUM: Self = Self(0x2000);
     /// Medium-plus integrity level, possibly for UI access
-    pub const MEDIUM_UI_ACCESS: Self = Self(0x2100);
+    pub const MEDIUM_PLUS: Self = Self(0x2100);
     /// High integrity level, elevated processes, programs launched as administrator
     pub const HIGH: Self = Self(0x3000);
     /// System integrity level, admin level processes, core OS processes, Windows services
@@ -382,7 +382,7 @@ impl fmt::Debug for IntegrityLevel {
             Self::UNTRUSTED => format!("Untrusted (0x{:04x})", self.0),
             Self::LOW => format!("Low (0x{:04x})", self.0),
             Self::MEDIUM => format!("Medium (0x{:04x})", self.0),
-            Self::MEDIUM_UI_ACCESS => format!("Medium (with ui access) (0x{:04x})", self.0),
+            Self::MEDIUM_PLUS => format!("Medium-plus (0x{:04x})", self.0),
             Self::HIGH => format!("High (0x{:04x})", self.0),
             Self::SYSTEM => format!("System (0x{:04x})", self.0),
             Self::PROTECTED => format!("Protected (0x{:04x})", self.0),
