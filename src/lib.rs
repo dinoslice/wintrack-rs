@@ -169,28 +169,26 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 
         tx.send(res).expect("rx should still exist");
         
-        loop {
-            let mut msg = MSG::default();
-            
-            // SAFETY: msg is non-null & valid to write to (unique ptr due to &mut),
-            // and thread has a message queue to read from
-            match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
-                BOOL(0) => {
-                    assert_eq!(
-                        msg.message, WM_QUIT,
-                        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagew
-                        "If the function retrieves a message other than WM_QUIT, the return value is nonzero."
-                    );
-                    
-                    break Ok(());
-                }
-                BOOL(-1) => match WinErr::from_win32() {
-                    err if err == WinErr::from(ERROR_INVALID_WINDOW_HANDLE) => unreachable!("shouldn't trigger since hwnd is None"),
-                    err if err == WinErr::from(ERROR_INVALID_PARAMETER) => unreachable!("should be calling GetMessageW with correct params"),
-                    err => break Err(err),
-                },
-                bool => unreachable!("message queue should not recv any other messages ({:?}, msg: {})", bool, msg.message),
+        let mut msg = MSG::default();
+        
+        // SAFETY: msg is non-null & valid to write to (unique ptr due to &mut),
+        // and thread has a message queue to read from
+        match unsafe { GetMessageW(&mut msg, None, 0, 0) } {
+            BOOL(0) => {
+                assert_eq!(
+                    msg.message, WM_QUIT,
+                    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagew
+                    "If the function retrieves a message other than WM_QUIT, the return value is nonzero."
+                );
+                
+                Ok(())
             }
+            BOOL(-1) => match WinErr::from_win32() {
+                err if err == WinErr::from(ERROR_INVALID_WINDOW_HANDLE) => unreachable!("shouldn't trigger since hwnd is None"),
+                err if err == WinErr::from(ERROR_INVALID_PARAMETER) => unreachable!("should be calling GetMessageW with correct params"),
+                err => Err(err),
+            },
+            bool => unreachable!("message queue should not recv any other messages ({:?}, msg: {})", bool, msg.message),
         }
         
         // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwinevent
