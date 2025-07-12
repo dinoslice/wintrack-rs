@@ -92,9 +92,9 @@ pub enum WindowEventKind {
     ForegroundWindowChanged,
     /// The window title or name changed. ([`EVENT_OBJECT_NAMECHANGE`])
     WindowNameChanged,
-    /// The window became visible (shown / unminimized / moved onscreen). ([`EVENT_OBJECT_SHOW`])
+    /// The window became visible (unminimized / moved onscreen). ([`EVENT_OBJECT_SHOW`])
     WindowBecameVisible,
-    /// The window became hidden (hidden / minimized / moved offscreen). ([`EVENT_OBJECT_HIDE`])
+    /// The window became hidden (minimized / moved offscreen). ([`EVENT_OBJECT_HIDE`])
     WindowBecameHidden,
     /// A new window was created. ([`EVENT_OBJECT_CREATE`])
     WindowCreated,
