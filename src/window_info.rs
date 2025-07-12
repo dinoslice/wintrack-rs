@@ -5,7 +5,7 @@ use std::num::NonZeroU32;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
 use std::ptr::NonNull;
-use windows::Win32::Foundation::{CloseHandle, SetLastError, ERROR_ACCESS_DENIED, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_HANDLE, ERROR_INVALID_PARAMETER, ERROR_INVALID_SID, ERROR_INVALID_WINDOW_HANDLE, ERROR_PARTIAL_COPY, ERROR_SUCCESS, HANDLE, HWND, MAX_PATH, RECT};
+use windows::Win32::Foundation::{CloseHandle, SetLastError, ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_HANDLE, ERROR_INVALID_PARAMETER, ERROR_INVALID_SID, ERROR_INVALID_WINDOW_HANDLE, ERROR_PARTIAL_COPY, ERROR_SUCCESS, HANDLE, HWND, MAX_PATH, RECT};
 use windows::core::{Error as WinErr, PWSTR};
 use windows::Win32::Security::{GetSidSubAuthority, GetSidSubAuthorityCount, GetTokenInformation, IsValidSid, TokenIntegrityLevel, TOKEN_MANDATORY_LABEL, TOKEN_QUERY};
 use windows::Win32::System::Threading::{OpenProcess, OpenProcessToken, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
