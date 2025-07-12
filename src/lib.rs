@@ -11,9 +11,33 @@ pub use window_info::WinThreadId;
 mod window_info;
 pub use window_info::*;
 
+/// A window event.
+/// 
+/// Represents an event related to a window, like becoming foreground or title change,
+/// along with a [snapshot](WindowSnapshot) of the window when the event occurred.
+/// 
+/// Most likely, you'll get a window event from the callback set by [`set_callback`](set_callback).
+/// 
+/// # Examples
+/// ```no_run
+/// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+/// window_events::set_callback(Box::new(|event: WindowEvent| {
+///     // every event has a snapshot of the window's current state
+///     let snapshot: WindowSnapshot = event.snapshot;
+///     assert_eq!(snapshot.title, "Firefox");
+///     assert_eq!(snapshot.class_name, "MozillaWindowClass");
+/// 
+///     // ... and the kind of event that caused it
+///     if event.kind == WindowEventKind::ForegroundWindowChanged {
+///         assert!(snapshot.is_foreground);
+///     }
+/// }));
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct WindowEvent {
+    /// The specific type of event that occurred.
     pub kind: WindowEventKind,
+    /// A snapshot of the window's properties when the event occurred. 
     pub snapshot: WindowSnapshot,
 }
 
