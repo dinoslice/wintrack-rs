@@ -1,5 +1,5 @@
 [package]
-name = "window_events"
+name = "wintrack"
 version = "1.0.0"
 description = "Library for monitoring window related events on Windows."
 #readme = true
@@ -12,7 +12,7 @@ authors = [
     "abscosmos <joshua@dinoslice.com>",
 ]
 #homepage = "https://dinoslice.com/projects/..."
-#repository = "https://github.com/dinoslice/..."
+#repository = "https://github.com/dinoslice/wintrack-rs"
 edition = "2024"
 
 [dependencies]

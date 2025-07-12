@@ -21,11 +21,11 @@
 //! # Usage
 //! First, call [`try_hook`], which spawns a thread that sets a hook & listens for events.
 //! ```no_run
-//! window_events::try_hook().expect("no hook should be set yet");
+//! wintrack::try_hook().expect("no hook should be set yet");
 //! ```
 //! Then, define a callback that will be called for each event.
 //! ```no_run
-//! window_events::set_callback(Box::new(|evt| {
+//! wintrack::set_callback(Box::new(|evt| {
 //!     // ignore events from zero-sized windows or windows with no title
 //!     if evt.snapshot.rect.size() != (0, 0) && !evt.snapshot.title.is_empty() {
 //!         dbg!(evt.snapshot);
@@ -34,7 +34,7 @@
 //! ```
 //! At the end of your program, optionally [`unhook`] the hook.
 //! ```no_run
-//! window_events::unhook().expect("should have set hook earlier")
+//! wintrack::unhook().expect("should have set hook earlier")
 //! ```
 //!
 //! For an example of using a channel to collect events or listen for events in another location of your program,
@@ -62,8 +62,8 @@ pub use window_info::*;
 ///
 /// # Examples
 /// ```no_run
-/// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
-/// window_events::set_callback(Box::new(|event: WindowEvent| {
+/// # use wintrack::{WindowEvent, WindowEventKind, WindowSnapshot};
+/// wintrack::set_callback(Box::new(|event: WindowEvent| {
 ///     // every event has a snapshot of the window's current state
 ///     let snapshot: WindowSnapshot = event.snapshot;
 ///     assert_eq!(snapshot.title, "Firefox");
@@ -300,7 +300,7 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 /// # Examples
 /// Debug print all* events:
 /// ```no_run
-/// window_events::set_callback(Box::new(|evt| {
+/// wintrack::set_callback(Box::new(|evt| {
 ///     // ignore events from zero-sized windows or windows with no title
 ///     if evt.snapshot.rect.size() != (0, 0) && !evt.snapshot.title.is_empty() {
 ///         dbg!(evt.snapshot);
@@ -310,14 +310,14 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 /// Using a channel:
 /// ```no_run
 /// # use std::ffi::OsStr;
-/// # use window_events::WindowEventKind;
+/// # use wintrack::WindowEventKind;
 /// use std::sync::mpsc;
 ///
-/// window_events::try_hook().expect("hook should not be set yet");
+/// wintrack::try_hook().expect("hook should not be set yet");
 ///
 /// let (tx, rx) = mpsc::channel();
 ///
-/// window_events::set_callback(Box::new(move |event| {
+/// wintrack::set_callback(Box::new(move |event| {
 ///     let snapshot_exe = event.snapshot.executable.file_name();
 ///     let is_firefox = snapshot_exe == Some(OsStr::new("firefox.exe"));
 ///

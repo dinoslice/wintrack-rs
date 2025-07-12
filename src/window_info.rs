@@ -17,8 +17,8 @@ use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetForegroundWindow
 ///
 /// # Examples
 /// ```no_run
-/// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
-/// window_events::set_callback(Box::new(|event: WindowEvent| {
+/// # use wintrack::{WindowEvent, WindowEventKind, WindowSnapshot};
+/// wintrack::set_callback(Box::new(|event: WindowEvent| {
 ///     // every event has a snapshot of the window's current state
 ///     let snapshot: WindowSnapshot = event.snapshot;
 ///     assert_eq!(snapshot.title, "Firefox");
@@ -35,7 +35,7 @@ pub struct WindowSnapshot {
     ///
     /// # Examples:
     /// ```no_run
-    /// # use window_events::WindowSnapshot;
+    /// # use wintrack::WindowSnapshot;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.title, "Firefox");
     /// ```
@@ -44,7 +44,7 @@ pub struct WindowSnapshot {
     ///
     /// # Examples:
     /// ```no_run
-    /// # use window_events::WindowSnapshot;
+    /// # use wintrack::WindowSnapshot;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.class_name, "MozillaWindowClass");
     /// ```
@@ -59,7 +59,7 @@ pub struct WindowSnapshot {
     /// 
     /// # Examples:
     /// ```no_run
-    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// # use wintrack::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::WindowBecameVisible);
     /// assert!(!snapshot.is_minimized);
@@ -69,7 +69,7 @@ pub struct WindowSnapshot {
     ///
     /// # Examples:
     /// ```no_run
-    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// # use wintrack::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::ForegroundWindowChanged);
     /// assert!(snapshot.is_foreground);
@@ -79,7 +79,7 @@ pub struct WindowSnapshot {
     ///
     /// # Examples:
     /// ```no_run
-    /// # use window_events::{WindowEvent, WindowEventKind, WindowSnapshot};
+    /// # use wintrack::{WindowEvent, WindowEventKind, WindowSnapshot};
     /// let WindowEvent { kind, snapshot } = todo!();
     /// assert_eq!(kind, WindowEventKind::WindowBecameHidden);
     /// assert!(!snapshot.is_visible);
@@ -89,7 +89,7 @@ pub struct WindowSnapshot {
     ///
     /// # Examples:
     /// ```no_run
-    /// # use window_events::WindowSnapshot;
+    /// # use wintrack::WindowSnapshot;
     /// # use std::path::PathBuf;
     /// let browser_snapshot: WindowSnapshot = todo!();
     /// assert_eq!(browser_snapshot.executable, PathBuf::from(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
@@ -118,7 +118,7 @@ impl WindowSnapshot {
     /// # Example:
     /// ```no_run
     /// # use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
-    /// # use window_events::WindowSnapshot;
+    /// # use wintrack::WindowSnapshot;
     /// // SAFETY: this function (from Win32 API) is always safe to call
     /// let hwnd = unsafe { GetForegroundWindow() };
     ///
@@ -311,7 +311,7 @@ unsafe fn get_window_rect(hwnd: HWND) -> Result<WindowRect, WinErr> {
 ///
 /// # Examples:
 /// ```no_run
-/// # use window_events::{WindowSnapshot, WinThreadId};
+/// # use wintrack::{WindowSnapshot, WinThreadId};
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// let thread_id = WinThreadId::new(335364).expect("nonzero!");
 /// assert_eq!(browser_snapshot.thread_id, thread_id);
@@ -322,7 +322,7 @@ pub type WinThreadId = NonZeroU32;
 ///
 /// # Examples:
 /// ```no_run
-/// # use window_events::WindowSnapshot;
+/// # use wintrack::WindowSnapshot;
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// assert_eq!(browser_snapshot.process_id, 340304);
 /// ```
@@ -349,7 +349,7 @@ unsafe fn get_window_thread_process_id(hwnd: HWND) -> Result<(WinThreadId, WinPr
 ///
 /// # Examples:
 /// ```no_run
-/// # use window_events::{IntegrityLevel, WindowSnapshot};
+/// # use wintrack::{IntegrityLevel, WindowSnapshot};
 /// let browser_snapshot: WindowSnapshot = todo!();
 /// assert_eq!(browser_snapshot.integrity_level, IntegrityLevel::MEDIUM);
 /// ```
