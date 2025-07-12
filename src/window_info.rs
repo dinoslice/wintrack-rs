@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::ffi::OsString;
 use std::fmt;
 use std::num::NonZeroU32;
