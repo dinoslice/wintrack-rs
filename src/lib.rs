@@ -1,3 +1,45 @@
+#![warn(missing_docs)]
+
+//! A library for monitoring window related events on Windows.
+//!
+//! This crate allows you to set a callback that will be called for common window events.
+//! The callback receives a [`WindowEvent`], which includes the [event kind](WindowEventKind) and
+//! a [snapshot of the window's state](WindowSnapshot) at the time of the event.
+//!
+//! This library allows you to listen for the following events:
+//! - [Foreground (active) window changed](WindowEventKind::ForegroundWindowChanged)
+//! - [Window title or name changed](WindowEventKind::WindowNameChanged)
+//! - [Window became visible (unminimized / moved onscreen)](WindowEventKind::WindowBecameVisible)
+//! - [Window became hidden (minimized / moved offscreen)](WindowEventKind::WindowBecameHidden)
+//! - [New window was created](WindowEventKind::WindowCreated)
+//! - [Window was destroyed or closed](WindowEventKind::WindowDestroyed)
+//! - [Window was moved or resized](WindowEventKind::WindowMovedOrResized)
+//!
+//! The [snapshot](WindowSnapshot) contains fields including
+//! title, rect, executable, and some lower level information.
+//!
+//! # Usage
+//! First, call [`try_hook`], which spawns a thread that sets a hook & listens for events.
+//! ```no_run
+//! window_events::try_hook().expect("no hook should be set yet");
+//! ```
+//! Then, define a callback that will be called for each event.
+//! ```no_run
+//! window_events::set_callback(Box::new(|evt| {
+//!     // ignore events from zero-sized windows or windows with no title
+//!     if evt.snapshot.rect.size() != (0, 0) && !evt.snapshot.title.is_empty() {
+//!         dbg!(evt.snapshot);
+//!     }
+//! }));
+//! ```
+//! At the end of your program, optionally [`unhook`] the hook.
+//! ```no_run
+//! window_events::unhook().expect("should have set hook earlier")
+//! ```
+//! 
+//! For an example of using a channel to collect events or listen for events in another location of your program,
+//! see the example in the documentation for [`set_callback`].
+
 use std::panic;
 use std::thread::JoinHandle;
 use parking_lot::Mutex;
