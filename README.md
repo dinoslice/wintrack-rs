@@ -1,4 +1,8 @@
 # Wintrack
+
+[![Crate](https://img.shields.io/crates/v/wintrack.svg)](https://crates.io/crates/wintrack)
+[![API](https://docs.rs/wintrack/badge.svg)](https://docs.rs/wintrack)
+
 A library for monitoring window related events on Windows.
 
 > View API reference on [docs.rs](https://docs.rs/wintrack), and the crate page on [crates.io](https://crates.io/crates/wintrack).
