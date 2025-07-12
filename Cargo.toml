@@ -1,6 +1,18 @@
 [package]
 name = "window_events"
-version = "0.1.0"
+version = "1.0.0"
+description = "Library for monitoring window related events on Windows."
+#readme = true
+license = "MIT OR Apache-2.0"
+keywords = ["windows", "events", "windowing"]
+categories = ["os::windows-apis", "api-bindings"]
+
+authors = [
+    "dinoslice Development Team <dev@dinoslice.com>",
+    "abscosmos <joshua@dinoslice.com>",
+]
+#homepage = "https://dinoslice.com/projects/..."
+#repository = "https://github.com/dinoslice/..."
 edition = "2024"
 
 [dependencies]
@@ -8,3 +20,7 @@ oneshot = "0.1.11"
 parking_lot = "0.12.4"
 thiserror = "2.0.12"
 windows = { version = "0.61.1", features = ["Win32_UI_Accessibility", "Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_Threading", "Win32_Security"] }
+
+[lints.clippy]
+unwrap_used = "warn"
+print_stdout = "warn"
