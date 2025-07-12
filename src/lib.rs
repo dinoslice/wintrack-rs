@@ -1,3 +1,4 @@
+#![cfg(windows)]
 #![warn(missing_docs)]
 
 //! A library for monitoring window related events on Windows.
@@ -39,6 +40,9 @@
 //!
 //! For an example of using a channel to collect events or listen for events in another location of your program,
 //! see the example in the documentation for [`set_callback`].
+
+#[cfg(not(windows))]
+compile_error!("The `wintrack` crate only supports Windows.");
 
 use std::panic;
 use std::thread::JoinHandle;
