@@ -379,15 +379,15 @@ impl IntegrityLevel {
 impl fmt::Debug for IntegrityLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let field = match *self {
-            Self::UNTRUSTED => "Untrusted (0x0000)".into(),
-            Self::LOW => "Low (0x1000)".into(), 
-            Self::MEDIUM => "Medium (0x2000)".into(), 
-            Self::MEDIUM_UI_ACCESS => "Medium (with ui access) (0x2100)".into(), 
-            Self::HIGH => "High (0x3000)".into(), 
-            Self::SYSTEM => "System (0x4000)".into(), 
-            Self::PROTECTED => "Protected (0x5000)".into(),
-            Self::SECURE => "Secure (0x7000)".into(),
-            Self(rid) => Cow::Owned(rid.to_string()),
+            Self::UNTRUSTED => format!("Untrusted (0x{:04x})", self.0),
+            Self::LOW => format!("Low (0x{:04x})", self.0),
+            Self::MEDIUM => format!("Medium (0x{:04x})", self.0),
+            Self::MEDIUM_UI_ACCESS => format!("Medium (with ui access) (0x{:04x})", self.0),
+            Self::HIGH => format!("High (0x{:04x})", self.0),
+            Self::SYSTEM => format!("System (0x{:04x})", self.0),
+            Self::PROTECTED => format!("Protected (0x{:04x})", self.0),
+            Self::SECURE => format!("Secure (0x{:04x})", self.0),
+            Self(rid) => format!("0x{:04x}", rid),
         };
 
         f.debug_tuple(&field).finish()
