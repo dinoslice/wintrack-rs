@@ -136,8 +136,7 @@ unsafe extern "system" fn win_event_proc(
 
 pub type WindowEventCallback = Box<dyn Fn(WindowEvent) + Send>;
 
-#[derive(Default)]
-pub struct WinHookState {
+struct WinHookState {
     pub callback: Option<WindowEventCallback>,
     pub thread: Option<(JoinHandle<Result<(), WinErr>>, WinThreadId)>,
 }
