@@ -251,7 +251,10 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 ///
 /// If you need to listen for the events in another location in your program,
 /// or need to collect them, you might want to set up a [channel](std::sync::mpsc).
-///
+/// 
+/// # Panics
+/// If the callback provided ever panics, the program will panic as expected.
+/// 
 /// # Examples
 /// Debug print all* events:
 /// ```no_run
@@ -294,8 +297,6 @@ fn hook_inner() -> Result<(JoinHandle<Result<(), WinErr>>, WinThreadId), WinErr>
 /// #   _ = browser_snapshot;
 /// }
 /// ```
-/// # Panics
-/// If the callback provided ever panics, the program will panic as expected.
 pub fn set_callback(callback: WindowEventCallback) -> Option<WindowEventCallback> {
     STATE.lock().callback.replace(callback)
 }
